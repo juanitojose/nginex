@@ -2,7 +2,7 @@
   "kind": "Template",
   "apiVersion": "template.openshift.io/v1",
   "metadata": {
-    "name": "nginx-example",
+    "name": "nginex",
     "annotations": {
       "openshift.io/display-name": "Nginx HTTP server and a reverse proxy",
       "description": "An example Nginx HTTP server and a reverse proxy (nginx) application that serves static content. For more information about using this template, including OpenShift considerations, see https://github.com/sclorg/nginx-ex/blob/master/README.md.",
@@ -158,7 +158,7 @@
           "spec": {
             "containers": [
               {
-                "name": "nginx-example",
+                "name": "nginex",
                 "image": " ",
                 "ports": [
                   {
@@ -201,7 +201,7 @@
       "displayName": "Name",
       "description": "The name assigned to all of the frontend objects defined in this template.",
       "required": true,
-      "value": "nginx-example"
+      "value": "nginex"
     },
     {
       "name": "NAMESPACE",
