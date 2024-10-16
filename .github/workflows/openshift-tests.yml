@@ -2,40 +2,29 @@ on:
   issue_comment:
     types:
       - created
-
 jobs:
-  check-imagestreams:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      statuses: write
-    if: |
-      github.event.issue.pull_request
-      && (contains(github.event.comment.body, '[test-openshift]') || contains(github.event.comment.body, '[test-all]'))
-      && contains(fromJson('["OWNER", "MEMBER"]'), github.event.comment.author_association)
-    steps:
-      - uses: sclorg/ci-scripts/ocp-stream-generator@master
-        with:
-          ref: "refs/pull/${{ github.event.issue.number }}/head"
-
   openshift-tests:
-    name: "${{ matrix.test_case }} tests: ${{ matrix.version }} - ${{ matrix.os_test }}"
-    runs-on: ubuntu-latest
-    needs: check-imagestreams
-    concurrency:
-      group: ocp-${{ github.event.issue.number }}-${{ matrix.version }}-${{ matrix.os_test }}
-      cancel-in-progress: true
+    # This job only runs for '[test] pull request comments by owner, member
+    name: "RHEL8 tests: imagestream ${{ matrix.version }}"
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        version: [ "1.20", "1.22", "1.22-micro", "1.24", "1.26" ]
-        os_test: [ "rhel8", "rhel9" ]
-        test_case: [ "openshift-4" ]
+        version: [ "1.20-ubi7", "1.22-ubi8", "1.20-ubi9", "1.22-ubi9" ]
+
+    if: |
+      github.event.issue.pull_request
+      && contains(github.event.comment.body, '[test]')
+      && contains(fromJson('["OWNER", "MEMBER"]'), github.event.comment.author_association)
     steps:
-      - uses: sclorg/tfaga-wrapper@main
+      - uses: sclorg/testing-farm-as-github-action@main
         with:
-          os_test: ${{ matrix.os_test }}
-          version: ${{ matrix.version }}
-          test_case: ${{ matrix.test_case }}
-          public_api_key: ${{ secrets.TF_PUBLIC_API_KEY }}
-          private_api_key: ${{ secrets.TF_INTERNAL_API_KEY }}
+          api_key: ${{ secrets.TF_INTERNAL_API_KEY }}
+          compose: "RHEL-8.8.0-Nightly"
+          git_url: "https://gitlab.cee.redhat.com/platform-eng-core-services/sclorg-tmt-plans"
+          git_ref: "master"
+          tf_scope: "private"
+          tmt_plan_regex: "rhel8-openshift-4"
+          update_pull_request_status: true
+          pull_request_status_name: "RHEL8-OpenShift-4 - imagestream test ${{ matrix.version }}"
+          variables: "REPO_URL=${{ github.server_url }}/${{ github.repository }};REPO_NAME=${{ github.repository }};PR_NUMBER=${{ github.event.issue.number }};OS=rhel8;SINGLE_VERSION=${{ matrix.version }};TEST_NAME=test-openshift-4"

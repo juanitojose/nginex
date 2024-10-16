@@ -1,154 +1,23 @@
-Nginx container images
-======================
+# Nginx HTTP server and reverse proxy (nginx) S2I Sample Application
 
-[![Build and push container images to quay.io registry](https://github.com/sclorg/nginx-container/actions/workflows/build-and-push.yml/badge.svg)](https://github.com/sclorg/nginx-container/actions/workflows/build-and-push.yml)
+This is a very basic sample application repository that can be built and deployed
+on [OpenShift](https://www.openshift.com) using the [Nginx HTTP server and a reverse proxy builder image](https://github.com/sclorg/nginx-container).
 
-Images available on Quay are:
-* CentOS Stream 9 [nginx-1.20](https://quay.io/repository/sclorg/nginx-120-c9s)
-* CentOS Stream 9 [nginx-1.24](https://quay.io/repository/sclorg/nginx-124-c9s)
-* CentOS Stream 10 [nginx-1.26](https://quay.io/repository/sclorg/nginx-126-c10s)
-* Fedora [nginx-1.20](https://quay.io/repository/fedora/nginx-120)
-* Fedora [nginx-1.22](https://quay.io/repository/fedora/nginx-122)
-* Fedora [nginx-1.24](https://quay.io/repository/fedora/nginx-124)
-* Fedora [nginx-1.26](https://quay.io/repository/fedora/nginx-126)
-* Micro CentOS Stream 9 [nginx-1.22](https://quay.io/repository/sclorg/nginx-122-micro-c9s)
-* Micro Fedora [nginx-1.22](https://quay.io/repository/fedora/nginx-122-micro)
+The application serves a single static html page via nginx.
 
-
-This repository contains Dockerfiles for Nginx images for OpenShift.
-Users can choose between RHEL, Fedora, CentOS and CentOS Stream based images.
-
-For more information about contributing, see
-[the Contribution Guidelines](https://github.com/sclorg/welcome/blob/master/contribution.md).
-For more information about concepts used in these container images, see the
-[Landing page](https://github.com/sclorg/welcome).
-
-
-Versions
---------
-Nginx versions currently provided are:
-* [nginx-1.20](1.20)
-* [nginx-1.22](1.22)
-* [nginx-1.22 micro](1.22-micro)
-* [nginx-1.24](1.24)
-* [nginx-1.26](1.26)
-
-RHEL versions currently supported are:
-* RHEL8
-* RHEL9
-
-CentOS Stream versions currently supported are:
-* CentOS Stream 9
-* CentOS Stream 10
-
-
-Installation
-----------------------
-Choose either the CentOS Stream 9 or RHEL8 based image:
-
-*  **RHEL8 based image**
-
-    These images are available in the [Red Hat Container Catalog](https://access.redhat.com/containers/#/registry.access.redhat.com/rhel8/nginx-124).
-    To download it run:
-
-    ```
-    $ podman pull registry.access.redhat.com/rhel8/nginx-124
-    ```
-
-    To build a RHEL8 based Nginx image, you need to run Docker build on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ git clone --recursive https://github.com/sclorg/nginx-container.git
-    $ cd nginx-container
-    $ git submodule update --init
-    $ make build TARGET=rhel8 VERSIONS=1.24
-    ```
-
-*  **CentOS Stream based image**
-
-    This image is available on DockerHub. To download it run:
-
-    ```
-    $ podman pull quay.io/sclorg/nginx-124-c9s
-    ```
-
-    To build a CentOS based Nginx image from scratch, run:
-
-    ```
-    $ git clone --recursive https://github.com/sclorg/nginx-container.git
-    $ cd nginx-container
-    $ git submodule update --init
-    $ make build TARGET=c9s VERSIONS=1.24
-    ```
-
-For using other versions of Nginx, just replace the `1.24` value by particular version
-in the commands above.
-
-Note: while the installation steps are calling `podman`, you can replace any such calls by `docker` with the same arguments.
-
-**Notice: By omitting the `VERSIONS` parameter, the build/test action will be performed
-on all provided versions of Nginx, which must be specified in  `VERSIONS` variable.
-This variable must be set to a list with possible versions (subdirectories).**
-
-
-Usage
------
-
-For information about usage of Dockerfile for nginx 1.20,
-see [usage documentation](1.20).
-
-For information about usage of Dockerfile for nginx 1.22,
-see [usage documentation](1.22).
-
-For information about usage of Dockerfile for nginx 1.24,
-see [usage documentation](1.24).
-
-For information about usage of Dockerfile for nginx 1.26,
-see [usage documentation](1.26).
-
-Build
------
-Images can be built using `make` command.
+To build and run the application:
 
 ```
-$ cd nginx-container
-$ git submodule update --init
-$ make build TARGET=rhel8 VERSIONS=1.22
+$ s2i build https://github.com/sclorg/nginx-ex centos/nginx-112-centos7 mynginximage
+$ docker run -p 8080:8080 mynginximage
+$ # browse to http://localhost:8080
 ```
 
-For more information about make rules see [README](https://github.com/sclorg/container-common-scripts/blob/master/README.md).
+You can also build and deploy the application on OpenShift, assuming you have a
+working `oc` command line environment connected to your cluster already:
 
-Test
----------------------------------
+`$ oc new-app centos/nginx-112-centos7~https://github.com/sclorg/nginx-ex`
 
-This repository also provides a test framework, which checks basic functionality
-of the Nginx image.
+You can also deploy the sample template for the application:
 
-Users can choose between testing Nginx based on a RHEL or CentOS image.
-
-*  **RHEL based image**
-
-    To test a RHEL8 based Nginx image, you need to run the test on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ cd nginx-container
-    $ git submodule update --init
-    $ make test TARGET=rhel8 VERSIONS=1.24
-    ```
-
-*  **CentOS Stream based image**
-
-    ```
-    $ cd nginx-container
-    $ git submodule update --init
-    $ make test TARGET=c9s VERSIONS=1.24
-    ```
-
-For using other versions of Nginx, just replace the `1.24` value by particular version
-in the commands above.
-
-**Notice: By omitting the `VERSIONS` parameter, the build/test action will be performed
-on all provided versions of Nginx, which must be specified in  `VERSIONS` variable.
-This variable must be set to a list with possible versions (subdirectories).**
+`$ oc new-app -f https://raw.githubusercontent.com/sclorg/nginx-ex/master/openshift/templates/nginx.json`
